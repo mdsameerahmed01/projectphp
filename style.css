@@ -1,10 +1,15 @@
 body {
+    background-image: url("img/s2.jpg");
     font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    background-size: cover; 
+    background-repeat: no-repeat;
+    background-position: center;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    margin: 0;  
+    padding: 0;
 }
 
 .form-container {
@@ -13,6 +18,7 @@ body {
     border-radius: 10px;
     box-shadow: 0px 0px 8px rgba(0,0,0,0.2);
     width: 400px;
+    margin: auto;
 }
 
 .form-container h2 {
@@ -51,4 +57,47 @@ body {
 
 .form-container button:hover {
     background: #45a049;
+}
+
+.login-link {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 2px solid #ff9800;
+    background: transparent;     
+    color: #ff9800;
+    text-decoration: none;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-link:hover {
+    background: rgba(255,152,0,0.08);
+    color: #e65100;
+    border-color: #e65100;
+}
+
+.login-link.small {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: auto;
+}
+
+.message {
+    text-align: center;   
+    margin-top: 15px;
+    width: 100%;
+}
+
+.success {
+    color: green;
+    font-weight: bold;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
 }

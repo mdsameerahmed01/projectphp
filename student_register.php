@@ -1,96 +1,121 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Student Registration</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="img/logo.png">
 </head>
-<body>
-<div class="form-container">
-    <h2>Student Registration</h2>
-    <form method="POST" action="">
-        <label>First Name</label>
-        <input type="text" name="fname" required>
 
-        <label>Last Name</label>
-        <input type="text" name="lname" required>
+<body style="background-image: url('img/s2.jpg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
+    <div class="black-fill"><br>
+        <div class="form-container">
+            <h2>Student Registration</h2>
 
-        <label>Date of Birth</label>
-        <input type="date" name="dob">
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger text-center">
+                    <?php foreach ($errors as $err) {
+                        echo "<p>$err</p>";
+                    } ?>
+                </div>
+            <?php endif; ?>
 
-        <label>Gender</label>
-        <select name="gender">
-            <option value="">Select</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-        </select>
+            <form method="POST" action="">
+                <label>First Name</label>
+                <input type="text" name="fname" required>
 
-        <label>Address</label>
-        <input type="text" name="address">
+                <label>Last Name</label>
+                <input type="text" name="lname" required>
 
-        <label>Contact Number</label>
-        <input type="text" name="contact">
+                <label>Date of Birth</label>
+                <input type="date" name="dob">
 
-        <label>Class/Grade</label>
-        <select name="class">
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-            <option>5</option>
-        </select>
+                <label>Gender</label>
+                <select name="gender">
+                    <option value="">Select</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                </select>
 
-        <hr>
-        <h3>Parent/Guardian Information</h3>
+                <label>Address</label>
+                <input type="text" name="address">
 
-        <label>Father's Name</label>
-        <input type="text" name="father_name">
+                <label>Contact Number</label>
+                <input type="text" name="contact">
 
-        <label>Mother's Name</label>
-        <input type="text" name="mother_name">
+                <label>Class/Grade</label>
+                <select name="class">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                </select>
 
-        <label>Parent Email</label>
-        <input type="email" name="parent_email">
+                <hr>
+                <h3>Parent/Guardian Information</h3>
 
-        <label>Parent Contact Number</label>
-        <input type="text" name="parent_contact">
+                <label>Father's Name</label>
+                <input type="text" name="father_name">
 
-        <label>Password</label>
-        <input type="password" name="password" required>
+                <label>Mother's Name</label>
+                <input type="text" name="mother_name">
 
-        <button type="submit" name="register">Register</button>
-    </form>
-</div>
+                <label>Parent Email</label>
+                <input type="email" name="parent_email" required>
 
-<?php
-if (isset($_POST['register'])) {
-    include("db_connect.php");
+                <label>Parent Contact Number</label>
+                <input type="text" name="parent_contact">
 
-    $fname        = $_POST['fname'];
-    $lname        = $_POST['lname'];
-    $dob          = $_POST['dob'];
-    $gender       = $_POST['gender'];
-    $address      = $_POST['address'];
-    $contact      = $_POST['contact'];
-    $class        = $_POST['class'];
-    $father_name  = $_POST['father_name'];
-    $mother_name  = $_POST['mother_name'];
-    $parent_email = $_POST['parent_email'];
-    $parent_contact = $_POST['parent_contact'];
-    $password     = $_POST['password'];
+                <label>Password</label>
+                <input type="password" name="password" required>
 
-    // Insert query
-    $sql = "INSERT INTO students 
+                <button type="submit" name="register">Register</button>
+            </form>
+            <a class="login-link" href="login.php">Already have an account? Login</a>
+        </div>
+
+        <div class="message">
+            <?php
+            if (isset($_POST['register'])) {
+                include("db_connect.php");
+
+                $fname        = $_POST['fname'];
+                $lname        = $_POST['lname'];
+                $dob          = $_POST['dob'];
+                $gender       = $_POST['gender'];
+                $address      = $_POST['address'];
+                $contact      = $_POST['contact'];
+                $class        = $_POST['class'];
+                $father_name  = $_POST['father_name'];
+                $mother_name  = $_POST['mother_name'];
+                $parent_email = $_POST['parent_email'];
+                $parent_contact = $_POST['parent_contact'];
+                $password     = $_POST['password'];
+
+                $check = "SELECT * FROM students WHERE parent_email='$parent_email'";
+                $result = mysqli_query($conn, $check);
+
+                if (mysqli_num_rows($result) > 0) {
+                    echo "<p style='text-align:center;color:red;'>This Parent Email is already registered. Please use another one.</p>";
+                } else {
+                    $sql = "INSERT INTO students 
         (first_name, last_name, dob, gender, address, contact, class, father_name, mother_name, parent_email, parent_contact, password)
         VALUES 
         ('$fname', '$lname', '$dob', '$gender', '$address', '$contact', '$class', '$father_name', '$mother_name', '$parent_email', '$parent_contact', '$password')";
 
-    if (mysqli_query($conn, $sql)) {
-        echo "<p style='text-align:center;color:green;'>Student Registered Successfully!</p>";
-    } else {
-        echo "<p style='text-align:center;color:red;'>Error: " . mysqli_error($conn) . "</p>";
-    }
-}
-?>
+                    if (mysqli_query($conn, $sql)) {
+                        echo "<p class='success'>Student Registered Successfully!</p>";
+                    } else {
+                        echo "<p class='error'>Error: " . mysqli_error($conn) . "</p>";
+                    }
+                }
+            }
+            ?>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
