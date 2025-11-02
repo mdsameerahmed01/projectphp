@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../session_cookie/session_init.php';
-if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
+if (!isset($_SESSION['role']) || $_SESSION['role'] != "teacher") {
     header("Location: ../login.php?msg=Access Denied");
     exit();
 }
@@ -22,7 +22,7 @@ if (isset($_POST['update'])) {
                SET first_name='$fname', last_name='$lname', class='$class', parent_email='$parent_email', contact='$contact' 
                WHERE id='$id'";
     if (mysqli_query($conn, $update)) {
-        header("Location: manage_students.php?msg=Student Updated Successfully");
+        header("Location: teacher_home.php?msg=Student Updated Successfully");
         exit();
     } else {
         echo "Error: " . mysqli_error($conn);
@@ -57,7 +57,7 @@ if (isset($_POST['update'])) {
 
             <button type="submit" name="update">Update</button>
         </form>
-        <a class="login-link" href="manage_students.php">⬅ Back</a>
+        <a class="login-link" href="teacher_home.php">⬅ Back</a>
     </div>
 </div>
 </body>

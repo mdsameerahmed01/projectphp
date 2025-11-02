@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../session_cookie/session_init.php';
 if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     header("Location: ../login.php?msg=Access Denied");
     exit();
@@ -34,7 +34,7 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
 <body class="body-home">
     <div class="black-fill"><br>
         <div class="container">
-            <nav class="navbar navbar-expand-lg bg-body-tertiary" id="homeNav">
+            <nav class="navbar navbar-expand-lg" id="homeNav">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="#">
                         <img src="../img/logo.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top">
@@ -55,7 +55,6 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                             <li class="nav-item"><a class="nav-link" href="#login_logs">Login Logs</a></li>
                             <li class="nav-item"><a class="nav-link" href="#attendance">Attendance</a></li>
                             <li class="nav-item"><a class="nav-link" href="#contact_messages">Contact Messages</a></li>
-                            <li class="nav-item"><a class="nav-link" href="#settings">Settings</a></li>
                         </ul>
                         <ul class="navbar-nav me-right mb-2 mb-lg-0">
                             <li class="nav-item">
@@ -81,36 +80,38 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                     <div class="card-body">
                         <h4 class="card-title">Teachers Management</h4>
                         <p class="card-text">View, add, edit, or delete teacher records.</p>
-                        <a href="../teacher_register.php" class="btn btn-success mb-2">Add New Teacher</a>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Subject</th>
-                                    <th>Qualification</th>
-                                    <th>Contact</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($teachers)): ?>
+                        <a href="../teacher_register.php" class="btn btn-success mb-3">Add New Teacher</a>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= $row['first_name'] . " " . $row['last_name'] ?></td>
-                                        <td><?= $row['email'] ?></td>
-                                        <td><?= $row['subjects'] ?></td>
-                                        <td><?= $row['qualification'] ?></td>
-                                        <td><?= $row['contact'] ?></td>
-                                        <td>
-                                            <a href="edit_teacher.php?id=<?= $row['id'] ?>">Edit</a> |
-                                            <a href="delete_teacher.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Subject</th>
+                                        <th>Qualification</th>
+                                        <th>Contact</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($teachers)): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($row['id']) ?></td>
+                                            <td><?= htmlspecialchars($row['first_name'] . " " . $row['last_name']) ?></td>
+                                            <td><?= htmlspecialchars($row['email']) ?></td>
+                                            <td><?= htmlspecialchars($row['subjects']) ?></td>
+                                            <td><?= htmlspecialchars($row['qualification']) ?></td>
+                                            <td><?= htmlspecialchars($row['contact']) ?></td>
+                                            <td class="text-center">
+                                                <a class="btn btn-sm btn-primary me-1" href="edit_teacher.php?id=<?= $row['id'] ?>">Edit</a>
+                                                <a class="btn btn-sm btn-danger" href="delete_teacher.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -123,33 +124,35 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                         <h4 class="card-title">Students Management</h4>
                         <p class="card-text">View, add, edit, or delete student records.</p>
                         <a href="../student_register.php" class="btn btn-success mb-2">Add New Student</a>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Class</th>
-                                    <th>Parent Email</th>
-                                    <th>Contact</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($students)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= $row['first_name'] . " " . $row['last_name'] ?></td>
-                                        <td><?= $row['class'] ?></td>
-                                        <td><?= $row['parent_email'] ?></td>
-                                        <td><?= $row['contact'] ?></td>
-                                        <td>
-                                            <a href="edit_student.php?id=<?= $row['id'] ?>">Edit</a> |
-                                            <a href="delete_student.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Parent Email</th>
+                                        <th>Contact</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($students)): ?>
+                                        <tr>
+                                            <td><?= $row['id'] ?></td>
+                                            <td><?= $row['first_name'] . " " . $row['last_name'] ?></td>
+                                            <td><?= $row['class'] ?></td>
+                                            <td><?= $row['parent_email'] ?></td>
+                                            <td><?= $row['contact'] ?></td>
+                                            <td class="text-center">
+                                                <a class="btn btn-sm btn-primary me-1" href="edit_student.php?id=<?= $row['id'] ?>">Edit</a>
+                                                <a class="btn btn-sm btn-danger" href="delete_student.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -160,24 +163,26 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                     <div class="card-body">
                         <h4 class="card-title">Admins List</h4>
                         <p class="card-text">Manage system admins.</p>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($admins)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= $row['email'] ?></td>
-                                        <td><?= $row['role'] ?></td>
+                                        <th>ID</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($admins)): ?>
+                                        <tr>
+                                            <td><?= $row['id'] ?></td>
+                                            <td><?= $row['email'] ?></td>
+                                            <td><?= $row['role'] ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -189,32 +194,35 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                         <h4 class="card-title">Notice</h4>
                         <p class="card-text">Track all Notice activities.</p>
                         <a href="create_notice.php" class="btn btn-success mb-2">Create New Notice</a>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Title</th>
-                                    <th>Message</th>
-                                    <th>Created_by</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <h2 class="text-light">Notices</h2>
-                                <?php while ($row = mysqli_fetch_assoc($res)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= $row['title'] ?></td>
-                                        <td><?= $row['message'] ?></td>
-                                        <td><?= $row['created_by'] ?></td>
-                                        <td><?= $row['status'] ?></td>
-                                            <a href="edit_notice.php?id=<?= $row['id'] ?>">Edit</a> |
-                                            <a href="delete_notice.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
-                                        </td>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Message</th>
+                                        <th>Created_by</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($res)): ?>
+                                        <tr>
+                                            <td><?= $row['id'] ?></td>
+                                            <td><?= $row['title'] ?></td>
+                                            <td><?= $row['message'] ?></td>
+                                            <td><?= $row['created_by'] ?></td>
+                                            <td><?= $row['status'] ?></td>
+                                            <td class="text-center">
+                                                <a class="btn btn-sm btn-primary me-1" href="edit_notice.php?id=<?= $row['id'] ?>">Edit</a> |
+                                                <a class="btn btn-sm btn-danger" href="delete_notice.php?id=<?= $row['id'] ?>" onclick="return confirm('Are you sure?')">Delete</a>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -225,24 +233,26 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                     <div class="card-body">
                         <h4 class="card-title">User Login Logs</h4>
                         <p class="card-text">Track all login activities.</p>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Login Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($login_logs)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['email'] ?></td>
-                                        <td><?= $row['role'] ?></td>
-                                        <td><?= $row['login_time'] ?></td>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Login Time</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($login_logs)): ?>
+                                        <tr>
+                                            <td><?= $row['email'] ?></td>
+                                            <td><?= $row['role'] ?></td>
+                                            <td><?= $row['login_time'] ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -253,26 +263,28 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                     <div class="card-body">
                         <h4 class="card-title">Attendance Report</h4>
                         <p class="card-text">View, add, edit, or delete student records.</p>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Student</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($att)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= htmlspecialchars($row['first_name'] . " " . $row['last_name']) ?></td>
-                                        <td><?= $row['date'] ?></td>
-                                        <td><?= $row['status'] ?></td>
+                                        <th>ID</th>
+                                        <th>Student</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($att)): ?>
+                                        <tr>
+                                            <td><?= $row['id'] ?></td>
+                                            <td><?= htmlspecialchars($row['first_name'] . " " . $row['last_name']) ?></td>
+                                            <td><?= $row['date'] ?></td>
+                                            <td><?= $row['status'] ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -283,42 +295,34 @@ $att = mysqli_query($conn, "SELECT a.id, s.first_name, s.last_name, a.date, a.st
                     <div class="card-body">
                         <h4 class="card-title">Contact Messages</h4>
                         <p class="card-text">View all messages submitted by users via the contact form.</p>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Comments</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($contacts)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover table-bordered align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td><?= $row['id'] ?></td>
-                                        <td><?= htmlspecialchars($row['name']) ?></td>
-                                        <td><?= htmlspecialchars($row['email']) ?></td>
-                                        <td><?= htmlspecialchars($row['comments']) ?></td>
-                                        <td><?= $row['created_at'] ?></td>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Comments</th>
+                                        <th>Date</th>
                                     </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php while ($row = mysqli_fetch_assoc($contacts)): ?>
+                                        <tr>
+                                            <td><?= $row['id'] ?></td>
+                                            <td><?= htmlspecialchars($row['name']) ?></td>
+                                            <td><?= htmlspecialchars($row['email']) ?></td>
+                                            <td><?= htmlspecialchars($row['comments']) ?></td>
+                                            <td><?= $row['created_at'] ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
             <br><br><br><br><br><br><br><br><br><br>
-
-            <section id="settings" class="mt-5 mb-5">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h4 class="card-title">System Settings</h4>
-                        <p class="card-text">Configure system-wide settings and preferences.</p>
-                        <a href="settings.php" class="btn btn-warning">Go to Settings</a>
-                    </div>
-                </div>
-            </section>
 
             <div class="text-center text-light mt-5 mb-3">
                 Copyright &copy; 2025 SYMGA School. All rights reserved.

@@ -5,7 +5,7 @@ include("db_connect.php");
 
 $errors = [];
 $success_message = "";
-$email = $fname = $lname = $role = ''; 
+$email = $fname = $lname = $role = '';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
     
@@ -13,9 +13,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
     $password = $_POST['password'] ?? '';
     $fname    = trim($_POST['fname'] ?? '');
     $lname    = trim($_POST['lname'] ?? '');
-    $role     = trim($_POST['role'] ?? '');
 
-    if (empty($email) || empty($password) || empty($fname) || empty($lname) || empty($role)) {
+    if (empty($email) || empty($password) || empty($fname) || empty($lname)) {
         $errors[] = "Please fill in all required fields.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email format.";
@@ -24,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
     }
     
     if (empty($errors)) {
-        $check_sql = "SELECT email FROM admins WHERE email = ? LIMIT 1";
+        $check_sql = "SELECT email FROM parents WHERE email = ? LIMIT 1";
         
         if ($stmt = mysqli_prepare($conn, $check_sql)) {
             mysqli_stmt_bind_param($stmt, "s", $email);
@@ -43,15 +42,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
     if (empty($errors)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         
-        $insert_sql = "INSERT INTO admins (first_name, last_name, role, email, password_hash) VALUES (?, ?, ?, ?, ?)";
+        $insert_sql = "INSERT INTO parents (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)";
 
         if ($stmt = mysqli_prepare($conn, $insert_sql)) {
-            mysqli_stmt_bind_param($stmt, "sssss", $fname, $lname, $role, $email, $hashed_password);
-            
+            mysqli_stmt_bind_param($stmt, "ssss", $fname, $lname, $email, $hashed_password);
             
             if (mysqli_stmt_execute($stmt)) {
-                $success_message = "Admin Registered Successfully! You can now log in.";
-                $email = $fname = $lname = $role = ''; 
+                $success_message = "Parent Registered Successfully! You can now log in.";
+                $email = $fname = $lname; 
             } else {
                 $errors[] = "Registration Error: " . mysqli_stmt_error($stmt);
             }
@@ -67,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
 <html>
 
 <head>
-    <title>Admin Registration</title>
+    <title>Parent Registration</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/logo.png">
 </head>
@@ -75,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
 <body>
     <div class="black-fill"><br>
         <div class="form-container">
-            <h2>Admin Registration</h2>
+            <h2>Parent Registration</h2>
 
             <?php if (!empty($errors)): ?>
                 <div style="color:red; text-align:center; padding:10px; border:1px solid red; margin-bottom:10px;">
@@ -103,14 +101,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
 
                 <label>Last Name</label>
                 <input type="text" name="lname" required value="<?= htmlspecialchars($lname); ?>">
-
-                <label>Role</label>
-                <select name="role" required>
-                    <option value="">Select Role</option>
-                    <option value="School Management" <?= ($role === 'School Management') ? 'selected' : ''; ?>>School Management</option>
-                    <option value="Principal" <?= ($role === 'Principal') ? 'selected' : ''; ?>>Principal</option>
-                    <option value="Vice Principal" <?= ($role === 'Vice Principal') ? 'selected' : ''; ?>>Vice Principal</option>
-                </select>
 
                 <button type="submit" name="register">Register</button>
             </form>

@@ -1,14 +1,14 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_cookie/session_init.php';
 include("db_connect.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name    = mysqli_real_escape_string($conn, $_POST['name']);
     $email   = mysqli_real_escape_string($conn, $_POST['email']);
-    $message = mysqli_real_escape_string($conn, $_POST['message']);
+    $comments = mysqli_real_escape_string($conn, $_POST['comments']);
 
-    $sql = "INSERT INTO contact_messages (name, email, message) 
-            VALUES ('$name', '$email', '$message')";
+    $sql = "INSERT INTO contact_messages (name, email, comments) 
+            VALUES ('$name', '$email', '$comments')";
 
     if (mysqli_query($conn, $sql)) {
         header("Location: index.php?msg=Your message has been sent successfully!");

@@ -1,121 +1,153 @@
+<?php
+
+require_once __DIR__ . '/session_cookie/session_init.php';
+include("db_connect.php");
+
+$errors = [];
+$success_message = "";
+$fname = $lname = $dob = $gender = $address = $contact = $class = $father_name = $mother_name = $parent_email = $parent_contact = "";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['register'])) {
+    $fname = trim($_POST['fname'] ?? '');
+    $lname = trim($_POST['lname'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $dob = trim($_POST['dob'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $contact = trim($_POST['contact'] ?? '');
+    $class = trim($_POST['class'] ?? '');
+    $father_name = trim($_POST['father_name'] ?? '');
+    $mother_name = trim($_POST['mother_name'] ?? '');
+    $parent_email = trim($_POST['parent_email'] ?? '');
+    $parent_contact = trim($_POST['parent_contact'] ?? '');
+    
+    if (empty($fname) || empty($lname) || empty($parent_email) || empty($password)) {
+        $errors[] = "Please fill in all required fields.";
+    } elseif (!filter_var($parent_email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid Parent Email format.";
+    } elseif (strlen($password) < 8) {
+        $errors[] = "Password must be at least 8 characters long.";
+    }
+
+    if (empty($errors)) {
+        $check_sql = "SELECT parent_email FROM students WHERE parent_email = ? LIMIT 1";
+        if ($stmt = mysqli_prepare($conn, $check_sql)) {
+            mysqli_stmt_bind_param($stmt, "s", $parent_email);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+
+            if (mysqli_stmt_num_rows($stmt) > 0) {
+                $errors[] = "This Parent Email is already registered.";
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    if (empty($errors)) {
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        $insert_sql = "INSERT INTO students 
+            (first_name, last_name, password_hash, dob, gender, address, contact, class, father_name, mother_name, parent_email, parent_contact)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        if ($stmt = mysqli_prepare($conn, $insert_sql)) {
+            mysqli_stmt_bind_param($stmt, "ssssssssssss",
+                $fname, $lname, $hashed_password, $dob, $gender, $address, $contact, $class, $father_name, $mother_name, $parent_email, $parent_contact);
+
+            if (mysqli_stmt_execute($stmt)) {
+                $success_message = "Student Registered Successfully!";
+                $fname = $lname = $dob = $gender = $address = $contact = $class = $father_name = $mother_name = $parent_email = $parent_contact = "";
+            } else {
+                $errors[] = "Error saving record: " . mysqli_stmt_error($stmt);
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html>
-
+    
 <head>
     <title>Student Registration</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="img/logo.png">
 </head>
 
-<body style="background-image: url('img/s2.jpg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
-    <div class="black-fill"><br>
-        <div class="form-container">
-            <h2>Student Registration</h2>
+<body>
+<div class="black-fill"><br>
+    <div class="form-container">
+        <h2>Student Registration</h2>
 
-            <?php if (!empty($errors)): ?>
-                <div class="alert alert-danger text-center">
-                    <?php foreach ($errors as $err) {
-                        echo "<p>$err</p>";
-                    } ?>
-                </div>
-            <?php endif; ?>
+        <?php if (!empty($errors)): ?>
+            <div style="color:red;text-align:center;padding:10px;border:1px solid red;margin-bottom:10px;">
+                <?php foreach ($errors as $err) echo "<p>" . htmlspecialchars($err) . "</p>"; ?>
+            </div>
+        <?php endif; ?>
 
-            <form method="POST" action="">
-                <label>First Name</label>
-                <input type="text" name="fname" required>
+        <?php if (!empty($success_message)): ?>
+            <div style="color:green;text-align:center;padding:10px;border:1px solid green;margin-bottom:10px;">
+                <p><?= htmlspecialchars($success_message); ?></p>
+            </div>
+        <?php endif; ?>
 
-                <label>Last Name</label>
-                <input type="text" name="lname" required>
+        <form method="POST" action="">
+            <label>First Name</label>
+            <input type="text" name="fname" required value="<?= htmlspecialchars($fname); ?>">
 
-                <label>Date of Birth</label>
-                <input type="date" name="dob">
+            <label>Last Name</label>
+            <input type="text" name="lname" required value="<?= htmlspecialchars($lname); ?>">
 
-                <label>Gender</label>
-                <select name="gender">
-                    <option value="">Select</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                </select>
+            <label>Date of Birth</label>
+            <input type="date" name="dob" value="<?= htmlspecialchars($dob); ?>">
 
-                <label>Address</label>
-                <input type="text" name="address">
+            <label>Gender</label>
+            <select name="gender">
+                <option value="">Select</option>
+                <option <?= $gender === 'Male' ? 'selected' : '' ?>>Male</option>
+                <option <?= $gender === 'Female' ? 'selected' : '' ?>>Female</option>
+                <option <?= $gender === 'Other' ? 'selected' : '' ?>>Other</option>
+            </select>
 
-                <label>Contact Number</label>
-                <input type="text" name="contact">
+            <label>Address</label>
+            <input type="text" name="address" value="<?= htmlspecialchars($address); ?>">
 
-                <label>Class/Grade</label>
-                <select name="class">
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                </select>
+            <label>Contact Number</label>
+            <input type="text" name="contact" value="<?= htmlspecialchars($contact); ?>">
 
-                <hr>
-                <h3>Parent/Guardian Information</h3>
+            <label>Class/Grade</label>
+            <select name="class">
+                <option value="">Select</option>
+                <?php for ($i = 1; $i <= 12; $i++): ?>
+                    <option value="<?= $i ?>" <?= $class == $i ? 'selected' : '' ?>><?= $i ?></option>
+                <?php endfor; ?>
+            </select>
 
-                <label>Father's Name</label>
-                <input type="text" name="father_name">
+            <hr>
+            <h3>Parent/Guardian Information</h3>
 
-                <label>Mother's Name</label>
-                <input type="text" name="mother_name">
+            <label>Father's Name</label>
+            <input type="text" name="father_name" value="<?= htmlspecialchars($father_name); ?>">
 
-                <label>Parent Email</label>
-                <input type="email" name="parent_email" required>
+            <label>Mother's Name</label>
+            <input type="text" name="mother_name" value="<?= htmlspecialchars($mother_name); ?>">
 
-                <label>Parent Contact Number</label>
-                <input type="text" name="parent_contact">
+            <label>Parent Email</label>
+            <input type="email" name="parent_email" required value="<?= htmlspecialchars($parent_email); ?>">
 
-                <label>Password</label>
-                <input type="password" name="password" required>
+            <label>Parent Contact Number</label>
+            <input type="text" name="parent_contact" value="<?= htmlspecialchars($parent_contact); ?>">
 
-                <button type="submit" name="register">Register</button>
-            </form>
-            <a class="login-link" href="login.php">Already have an account? Login</a>
-        </div>
+            <label>Password</label>
+            <input type="password" name="password" required>
 
-        <div class="message">
-            <?php
-            if (isset($_POST['register'])) {
-                include("db_connect.php");
+            <button type="submit" name="register">Register</button>
+        </form>
 
-                $fname        = $_POST['fname'];
-                $lname        = $_POST['lname'];
-                $dob          = $_POST['dob'];
-                $gender       = $_POST['gender'];
-                $address      = $_POST['address'];
-                $contact      = $_POST['contact'];
-                $class        = $_POST['class'];
-                $father_name  = $_POST['father_name'];
-                $mother_name  = $_POST['mother_name'];
-                $parent_email = $_POST['parent_email'];
-                $parent_contact = $_POST['parent_contact'];
-                $password     = $_POST['password'];
-
-                $check = "SELECT * FROM students WHERE parent_email='$parent_email'";
-                $result = mysqli_query($conn, $check);
-
-                if (mysqli_num_rows($result) > 0) {
-                    echo "<p style='text-align:center;color:red;'>This Parent Email is already registered. Please use another one.</p>";
-                } else {
-                    $sql = "INSERT INTO students 
-        (first_name, last_name, dob, gender, address, contact, class, father_name, mother_name, parent_email, parent_contact, password)
-        VALUES 
-        ('$fname', '$lname', '$dob', '$gender', '$address', '$contact', '$class', '$father_name', '$mother_name', '$parent_email', '$parent_contact', '$password')";
-
-                    if (mysqli_query($conn, $sql)) {
-                        echo "<p class='success'>Student Registered Successfully!</p>";
-                    } else {
-                        echo "<p class='error'>Error: " . mysqli_error($conn) . "</p>";
-                    }
-                }
-            }
-            ?>
-        </div>
+        <a class="login-link" href="login.php">Already have an account? Login</a>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 
 </html>

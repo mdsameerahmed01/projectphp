@@ -1,61 +1,102 @@
 <?php
-session_start();
+
+ob_start();
+require_once __DIR__ . '/session_cookie/session_init.php';
 include("db_connect.php");
 
+$error = ""; 
+$email = ""; 
+$role = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $role = $_POST['role'];
+    
+    $email = trim($_POST['email'] ?? '');
+    $password_input = $_POST['password'] ?? ''; 
+    $role = trim($_POST['role'] ?? '');
+    
+    if (empty($email) || empty($role) || $password_input === '') {
+        $error = "Please fill all required fields.";
+    } else {
 
-    if ($role == "admin") {
-        $query = "SELECT * FROM admins WHERE email='$email' AND password='$password'";
-        $result = mysqli_query($conn, $query);
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['role'] = "admin";
-            $_SESSION['email'] = $email;
+        $table = "";
+        $email_col = "";
+        $redirect = "";
+        $hash_col = "password_hash"; 
 
-            mysqli_query($conn, "INSERT INTO login_logs (email, role) VALUES ('$email', 'admin')");
-
-            header("Location: admin/admin_home.php");
-            exit();
+        switch ($role) {
+            case "admin":
+                $table = "admins";
+                $email_col = "email";
+                $redirect = "admin/admin_home.php";
+                break;
+            case "teacher":
+                $table = "teachers";
+                $email_col = "email";
+                $redirect = "teacher/teacher_home.php";
+                break;
+            case "student":
+                $table = "students";
+                $email_col = "parent_email"; 
+                $redirect = "student/student_home.php";
+                break;
+            case "parent":
+                $table = "parents";
+                $email_col = "email";
+                $redirect = "index.php"; 
+                break;
+            default:
+                $error = "Invalid role selected.";
+                break;
         }
-    } elseif ($role == "teacher") {
-        $query = "SELECT * FROM teachers WHERE email='$email' AND password='$password'";
-        $result = mysqli_query($conn, $query);
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['role'] = "teacher";
-            $_SESSION['email'] = $email;
 
-            mysqli_query($conn, "INSERT INTO login_logs (email, role) VALUES ('$email', 'teacher')");
 
-            header("Location: teacher/teacher_home.php");
-            exit();
+        if (!$error && $table !== "") {
+            
+            $sql = "SELECT $hash_col FROM $table WHERE $email_col = ? LIMIT 1";
+
+            if ($stmt = mysqli_prepare($conn, $sql)) {
+                mysqli_stmt_bind_param($stmt, "s", $email);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_store_result($stmt);
+                
+                if (mysqli_stmt_num_rows($stmt) === 1) {
+                    mysqli_stmt_bind_result($stmt, $password_db_hash);
+                    mysqli_stmt_fetch($stmt);
+                    mysqli_stmt_close($stmt);
+
+                    if (password_verify($password_input, $password_db_hash)) {
+                        
+                        session_regenerate_id(true); 
+                        $_SESSION['role'] = $role;
+                        $_SESSION['email'] = $email;
+
+                        // Secure Logging
+                        $log_sql = "INSERT INTO login_logs (email, role) VALUES (?, ?)";
+                        if ($log_stmt = mysqli_prepare($conn, $log_sql)) {
+                            mysqli_stmt_bind_param($log_stmt, "ss", $email, $role);
+                            mysqli_stmt_execute($log_stmt);
+                            mysqli_stmt_close($log_stmt);
+                        }
+
+                        header("Location: $redirect");
+                        exit();
+                    } else {
+                        $error = "Invalid email or password for $role!";
+                    }
+
+                } else {
+                    $error = "Invalid email or password for $role!";
+                }
+            } else {
+                $error = "Database preparation error. Please try again.";
+            }
         }
-    } elseif ($role == "student") {
-        $query = "SELECT * FROM students WHERE parent_email='$email' AND password='$password'";
-        $result = mysqli_query($conn, $query);
-        if (mysqli_num_rows($result) > 0) {
-            $_SESSION['role'] = "student";
-            $_SESSION['email'] = $email;
-
-            mysqli_query($conn, "INSERT INTO login_logs (email, role) VALUES ('$email', 'student')");
-
-            header("Location: student/student_home.php");
-            exit();
-        }
-    } elseif ($role == "other") {
-        $_SESSION['role'] = "other";
-        $_SESSION['email'] = $email;
-
-        mysqli_query($conn, "INSERT INTO login_logs (email, role) VALUES ('$email', 'other')");
-
-        header("Location: index.php?msg=Welcome Guest!");
-        exit();
     }
-
-    $error = "Invalid email or password for $role!";
 }
+
+ob_end_flush();
 ?>
+
 <!DOCTYPE html>
 <html>
 
@@ -63,31 +104,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Login</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="icon" href="img/logo.png">
 </head>
 
-<body style="background-image: url('img/s2.jpg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
+<body>
     <div class="black-fill"><br>
         <div class="form-container">
             <h2>Login</h2>
             <?php if (isset($error)) {
-                echo "<p style='color:red; text-align:center;'>$error</p>";
+                echo "<p style='color:red; text-align:center;'>" . htmlspecialchars($error) . "</p>";
             } ?>
             <form method="POST" action="">
                 <label>Role</label>
                 <select name="role" required>
                     <option value="">-- Select Role --</option>
-                    <option value="admin">Admin</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="student">Student</option>
-                    <option value="other">Other</option>
+                    <option value="admin" <?= $role === 'admin' ? 'selected' : ''; ?>>Admin</option>
+                    <option value="teacher" <?= $role === 'teacher' ? 'selected' : ''; ?>>Teacher</option>
+                    <option value="student" <?= $role === 'student' ? 'selected' : ''; ?>>Student</option>
+                    <option value="parent" <?= $role === 'parent' ? 'selected' : ''; ?>>Parent</option>
                 </select>
 
                 <label>Email</label>
-                <input type="email" name="email" required>
+                <input type="email" name="email" required value="<?= htmlspecialchars($email); ?>">
 
-                <label>Password</label>
-                <input type="password" name="password" required>
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <input type="password" name="password" id="password" required class="form-control">
+                    <span class="input-group-text" onclick="togglePassword()" style="cursor:pointer;">
+                        <i class="bi bi-eye" id="eyeIcon"></i>
+                    </span>
+                </div>
 
                 <button type="submit">Login</button>
             </form>
@@ -95,10 +142,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p style="text-align:center; margin-top:10px;">
                 Not registered?
                 <a href="student_register.php">Student</a> |
+                <a href="parent_register.php">Praent</a> |
                 <a href="teacher_register.php">Teacher</a> |
                 <a href="admin_register.php">Admin</a>
             </p>
         </div>
     </div>
+    <script>
+    function togglePassword() {
+        const pass = document.getElementById("password");
+        const eyeIcon = document.getElementById("eyeIcon");
+        
+        if (pass.type === "password") {
+        
+            pass.type = "text";
+        
+            eyeIcon.classList.remove("bi-eye"); 
+            eyeIcon.classList.add("bi-eye-slash");
+        } else {  
+            pass.type = "password";
+            
+            eyeIcon.classList.remove("bi-eye-slash"); 
+            eyeIcon.classList.add("bi-eye");
+        }
+    }
+</script>
 </body>
+
 </html>

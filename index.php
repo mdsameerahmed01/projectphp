@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '../session_cookie/session_init.php';
 if (!isset($_SESSION['role']) || $_SESSION['role'] != "other") {
     header("Location: login.php?msg=Access Denied");
     exit();
@@ -113,7 +113,7 @@ $res = mysqli_query($conn, "SELECT id, title, message, created_by, status FROM n
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Comments</label>
-                        <textarea name="message" class="form-control" rows="4" required></textarea>
+                        <textarea name="comments" class="form-control" rows="4" required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Send</button>
                 </form>

@@ -1,5 +1,5 @@
 <?php 
-session_start();
+require_once __DIR__ . '/../session_cookie/session_init.php';
 if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     header("Location: ../login.php?msg=Access Denied");
     exit();
